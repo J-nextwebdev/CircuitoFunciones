@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, jsonify
-from circuito_calc import solve_circuit
+from flask import Flask, render_template, request
+from circuito_calc import resolver_circuito
 
 app = Flask(__name__)
 
@@ -7,28 +7,30 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-@app.route('/calculate', methods=['POST'])
-def calculate():
+@app.route('/calcular', methods=['POST'])
+def calcular():
     try:
-        data = request.get_json()
+        tipo_comp = request.form.get('component_type')
+        conexion = request.form.get('connection_type')
+        v_bateria = request.form.get('battery_voltage')
         
-        comp_type = data.get('component_type')
-        connection = data.get('connection_type')
-        v_battery = data.get('battery_voltage')
-        components = data.get('components', [])
+        componentes = request.form.getlist('componentes[]')
         
-        if not v_battery or not components:
-            return jsonify({'error': 'Faltan datos. Asegúrate de ingresar el voltaje y al menos un componente.'}), 400
+        # Filtramos posibles valores vacíos
+        componentes = [c for c in componentes if c.strip()]
+        
+        if not v_bateria or not componentes:
+            return render_template('index.html', error='Faltan datos. Asegúrate de ingresar el voltaje y al menos un componente.')
             
-        result = solve_circuit(comp_type, connection, v_battery, components)
+        resultado = resolver_circuito(tipo_comp, conexion, v_bateria, componentes)
         
-        if 'error' in result:
-            return jsonify({'error': result['error']}), 400
+        if 'error' in resultado:
+            return render_template('index.html', error=resultado['error'])
             
-        return jsonify(result)
+        return render_template('index.html', resultados=resultado, tipo_comp=tipo_comp)
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return render_template('index.html', error=str(e))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

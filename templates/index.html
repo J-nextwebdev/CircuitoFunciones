@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
@@ -17,71 +19,86 @@
         </header>
 
         <main class="calculator-grid">
-            <!-- Panel de Configuración -->
-            <section class="card config-panel">
-                <h2>Configuración del Circuito</h2>
-                
-                <div class="input-group">
-                    <label for="battery_voltage">Voltaje de la Batería</label>
-                    <input type="text" id="battery_voltage" placeholder="Ej. 12 V, 500 mV" required>
-                    <small>Soporta prefijos: p, n, µ (u), m, k, M, G</small>
-                </div>
-
-                <div class="input-row">
+            <form method="POST" action="/calcular">
+                <!-- Panel de Configuración -->
+                <section class="card config-panel">
+                    <h2>Configuración del Circuito</h2>
+                    
+                    {% if error %}
+                    <div class="error-msg" style="color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    
                     <div class="input-group">
-                        <label for="component_type">Componente</label>
-                        <select id="component_type">
-                            <option value="resistor">Resistor</option>
-                            <option value="capacitor">Capacitor</option>
-                        </select>
+                        <label for="battery_voltage">Voltaje de la Batería (V)</label>
+                        <input type="number" step="any" id="battery_voltage" name="battery_voltage" placeholder="Ej. 12" required>
                     </div>
 
-                    <div class="input-group">
-                        <label for="connection_type">Conexión</label>
-                        <select id="connection_type">
-                            <option value="series">Serie</option>
-                            <option value="parallel">Paralelo</option>
-                        </select>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="component_type">Componente</label>
+                            <select id="component_type" name="component_type">
+                                <option value="resistor">Resistor</option>
+                                <option value="capacitor">Capacitor</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="connection_type">Conexión</label>
+                            <select id="connection_type" name="connection_type">
+                                <option value="series">Serie</option>
+                                <option value="parallel">Paralelo</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Panel del Grid de Componentes -->
-            <section class="card components-panel">
-                <div class="components-header">
-                    <h2>Componentes</h2>
-                    <button type="button" id="add_btn" class="btn btn-secondary">+ Añadir</button>
-                </div>
-                
-                <div class="table-container">
-                    <table id="components_table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th id="val_header">Resistencia</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="components_body">
-                            <!-- Filas generadas por JS -->
-                        </tbody>
-                    </table>
-                </div>
+                <!-- Panel del Grid de Componentes -->
+                <section class="card components-panel">
+                    <div class="components-header">
+                        <h2>Componentes</h2>
+                        <button type="button" id="add_btn" class="btn btn-secondary">+ Añadir</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="components_table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th id="val_header">Valor (Solo números)</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="components_body">
+                                <!-- Filas generadas por JS -->
+                            </tbody>
+                        </table>
+                    </div>
 
-                <button type="button" id="calculate_btn" class="btn btn-primary">Calcular Circuito</button>
-            </section>
+                    <button type="submit" id="calculate_btn" class="btn btn-primary">Calcular Circuito</button>
+                </section>
+            </form>
 
+            {% if resultados %}
             <!-- Panel de Resultados -->
-            <section class="card results-panel" id="results_panel" style="display: none;">
-                <h2>Resultados</h2>
+            <section class="card results-panel" id="results_panel">
+                <h2>Procedimiento</h2>
+                <div class="procedure-box" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    {% for paso in resultados.procedimiento %}
+                        <p>{{ paso | replace('**', '<strong>') | replace('</strong>\n', '</strong><br>') | safe }}</p>
+                    {% endfor %}
+                </div>
+
+                <h2>Resultados Finales</h2>
                 <div class="totals-grid">
                     <div class="total-item">
-                        <h3 id="res_total_title_1">Equivalente</h3>
-                        <p id="res_total_val_1" class="highlight-val">-</p>
+                        <h3 id="res_total_title_1">{{ resultados.total_title_1 }}</h3>
+                        <p id="res_total_val_1" class="highlight-val">{{ resultados.total_val_1 }}</p>
                     </div>
                     <div class="total-item">
-                        <h3 id="res_total_title_2">Total</h3>
-                        <p id="res_total_val_2" class="highlight-val">-</p>
+                        <h3 id="res_total_title_2">{{ resultados.total_title_2 }}</h3>
+                        <p id="res_total_val_2" class="highlight-val">{{ resultados.total_val_2 }}</p>
                     </div>
                 </div>
 
@@ -89,16 +106,31 @@
                 <div class="table-container">
                     <table id="results_table">
                         <thead>
-                            <tr id="results_thead_tr">
-                                <!-- Cabeceras generadas por JS -->
+                            <tr>
+                                <th>Componente</th>
+                                {% if tipo_comp == 'resistor' %}
+                                <th>Voltaje</th><th>Corriente</th>
+                                {% else %}
+                                <th>Carga</th><th>Voltaje</th>
+                                {% endif %}
                             </tr>
                         </thead>
-                        <tbody id="results_tbody">
-                            <!-- Filas generadas por JS -->
+                        <tbody>
+                            {% for res in resultados.individual_results %}
+                            <tr>
+                                <td><strong>{{ res.componente }}</strong></td>
+                                {% if tipo_comp == 'resistor' %}
+                                <td>{{ res.voltaje }}</td><td>{{ res.corriente }}</td>
+                                {% else %}
+                                <td>{{ res.carga }}</td><td>{{ res.voltaje }}</td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </section>
+            {% endif %}
         </main>
     </div>
 
