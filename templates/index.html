@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Circuitos Simples</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora de Circuitos</h1>
+            <p>Resuelve circuitos simples con resistores y capacitores (Serie / Paralelo)</p>
+        </header>
+
+        <main class="calculator-grid">
+            <!-- Panel de Configuración -->
+            <section class="card config-panel">
+                <h2>Configuración del Circuito</h2>
+                
+                <div class="input-group">
+                    <label for="battery_voltage">Voltaje de la Batería</label>
+                    <input type="text" id="battery_voltage" placeholder="Ej. 12 V, 500 mV" required>
+                    <small>Soporta prefijos: p, n, µ (u), m, k, M, G</small>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="component_type">Componente</label>
+                        <select id="component_type">
+                            <option value="resistor">Resistor</option>
+                            <option value="capacitor">Capacitor</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="connection_type">Conexión</label>
+                        <select id="connection_type">
+                            <option value="series">Serie</option>
+                            <option value="parallel">Paralelo</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel del Grid de Componentes -->
+            <section class="card components-panel">
+                <div class="components-header">
+                    <h2>Componentes</h2>
+                    <button type="button" id="add_btn" class="btn btn-secondary">+ Añadir</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="components_table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th id="val_header">Resistencia</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="components_body">
+                            <!-- Filas generadas por JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="button" id="calculate_btn" class="btn btn-primary">Calcular Circuito</button>
+            </section>
+
+            <!-- Panel de Resultados -->
+            <section class="card results-panel" id="results_panel" style="display: none;">
+                <h2>Resultados</h2>
+                <div class="totals-grid">
+                    <div class="total-item">
+                        <h3 id="res_total_title_1">Equivalente</h3>
+                        <p id="res_total_val_1" class="highlight-val">-</p>
+                    </div>
+                    <div class="total-item">
+                        <h3 id="res_total_title_2">Total</h3>
+                        <p id="res_total_val_2" class="highlight-val">-</p>
+                    </div>
+                </div>
+
+                <h3>Valores Individuales</h3>
+                <div class="table-container">
+                    <table id="results_table">
+                        <thead>
+                            <tr id="results_thead_tr">
+                                <!-- Cabeceras generadas por JS -->
+                            </tr>
+                        </thead>
+                        <tbody id="results_tbody">
+                            <!-- Filas generadas por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
