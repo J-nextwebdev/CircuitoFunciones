@@ -1,139 +1,232 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Circuitos Simples</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Calculadora de Circuitos</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "fontFamily": {
+                    "mono-value": ["monospace"],
+                    "inter": ["Inter", "sans-serif"]
+            },
+            "fontSize": {
+                    "body-base": ["1rem", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h1": ["2.5rem", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["0.875rem", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "mono-value": ["1.125rem", {"lineHeight": "1", "fontWeight": "500"}],
+                    "label-caps": ["0.75rem", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h2": ["1.875rem", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            },
+            "spacing": {
+                    "sm": "1rem",
+                    "gutter": "1.5rem",
+                    "xs": "0.5rem",
+                    "unit": "4px",
+                    "lg": "2.5rem",
+                    "max_width": "1280px",
+                    "md": "1.5rem"
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #ffffff;
+            color: #1e1030;
+        }
+        .glass-card {
+            background: rgba(253, 242, 248, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(244, 114, 182, 0.2);
+            box-shadow: 0 4px 24px rgba(244, 114, 182, 0.08);
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 20px rgba(244, 114, 182, 0.25);
+            border-color: rgba(244, 114, 182, 0.6);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+        }
+        .circuit-accent {
+            border-left: 4px solid #ec4899;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Calculadora de Circuitos</h1>
-            <p>Resuelve circuitos simples con resistores y capacitores (Serie / Paralelo)</p>
-        </header>
+<body class="font-inter antialiased min-h-screen">
 
-        <main class="calculator-grid">
-            <form method="POST" action="/calcular">
-                <!-- Panel de Configuración -->
-                <section class="card config-panel">
-                    <h2>Configuración del Circuito</h2>
-                    
-                    {% if error %}
-                    <div class="error-msg" style="color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
-                        {{ error }}
-                    </div>
-                    {% endif %}
-                    
-                    <div class="input-group">
-                        <label for="battery_voltage">Voltaje de la Batería (V)</label>
-                        <input type="number" step="any" id="battery_voltage" name="battery_voltage" placeholder="Ej. 12" required>
-                    </div>
+<main class="p-8 lg:p-12 max-w-7xl mx-auto w-full">
 
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label for="component_type">Componente</label>
-                            <select id="component_type" name="component_type">
-                                <option value="resistor">Resistor</option>
-                                <option value="capacitor">Capacitor</option>
-                            </select>
-                        </div>
-
-                        <div class="input-group">
-                            <label for="connection_type">Conexión</label>
-                            <select id="connection_type" name="connection_type">
-                                <option value="series">Serie</option>
-                                <option value="parallel">Paralelo</option>
-                            </select>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Panel del Grid de Componentes -->
-                <section class="card components-panel">
-                    <div class="components-header">
-                        <h2>Componentes</h2>
-                        <button type="button" id="add_btn" class="btn btn-secondary">+ Añadir</button>
-                    </div>
-                    
-                    <div class="table-container">
-                        <table id="components_table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th id="val_header">Valor (Solo números)</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="components_body">
-                                <!-- Filas generadas por JS -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <button type="submit" id="calculate_btn" class="btn btn-primary">Calcular Circuito</button>
-                </section>
-            </form>
-
-            {% if resultados %}
-            <!-- Panel de Resultados -->
-            <section class="card results-panel" id="results_panel">
-                <h2>Procedimiento</h2>
-                <div class="procedure-box" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-                    {% for paso in resultados.procedimiento %}
-                        <p>{{ paso | replace('**', '<strong>') | replace('</strong>\n', '</strong><br>') | safe }}</p>
-                    {% endfor %}
-                </div>
-
-                <h2>Resultados Finales</h2>
-                <div class="totals-grid">
-                    <div class="total-item">
-                        <h3 id="res_total_title_1">{{ resultados.total_title_1 }}</h3>
-                        <p id="res_total_val_1" class="highlight-val">{{ resultados.total_val_1 }}</p>
-                    </div>
-                    <div class="total-item">
-                        <h3 id="res_total_title_2">{{ resultados.total_title_2 }}</h3>
-                        <p id="res_total_val_2" class="highlight-val">{{ resultados.total_val_2 }}</p>
-                    </div>
-                </div>
-
-                <h3>Valores Individuales</h3>
-                <div class="table-container">
-                    <table id="results_table">
-                        <thead>
-                            <tr>
-                                <th>Componente</th>
-                                {% if tipo_comp == 'resistor' %}
-                                <th>Voltaje</th><th>Corriente</th>
-                                {% else %}
-                                <th>Carga</th><th>Voltaje</th>
-                                {% endif %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for res in resultados.individual_results %}
-                            <tr>
-                                <td><strong>{{ res.componente }}</strong></td>
-                                {% if tipo_comp == 'resistor' %}
-                                <td>{{ res.voltaje }}</td><td>{{ res.corriente }}</td>
-                                {% else %}
-                                <td>{{ res.carga }}</td><td>{{ res.voltaje }}</td>
-                                {% endif %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-            {% endif %}
-        </main>
+    <div class="text-center mb-12 pt-8">
+        <h1 class="text-h1 font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500 mb-2">Calculadora de Circuitos</h1>
+        <p class="text-slate-500 text-body-base">Resuelve circuitos simples con resistores y capacitores (Serie / Paralelo)</p>
     </div>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-</body>
-</html>
+    <!-- Mensaje de error -->
+    {% if error %}
+    <div class="mb-8 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-body-sm flex items-center gap-3">
+        <span class="material-symbols-outlined text-rose-500">error</span>
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/calcular">
+    <!-- Cuadrícula de diseño -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-12">
+
+        <!-- Columna izquierda: Configuración -->
+        <section class="glass-card rounded-xl p-8 shadow-sm">
+            <div class="border-b border-pink-100 pb-4 mb-6">
+                <h2 class="text-h2 text-slate-800 font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-pink-500">tune</span>
+                    Configuración del Circuito
+                </h2>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-label-caps text-slate-500 mb-2" for="battery_voltage">Voltaje de la Batería (V)</label>
+                    <input class="w-full bg-white border border-pink-200 rounded-lg px-4 py-3 text-slate-800 font-mono focus:border-pink-500 focus:ring-1 focus:ring-pink-400 transition-all outline-none glow-hover" id="battery_voltage" name="battery_voltage" placeholder="Ej. 12" step="any" type="number" required/>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-label-caps text-slate-500 mb-2" for="component_type">Componente</label>
+                        <select class="w-full bg-white border border-pink-200 rounded-lg px-4 py-3 text-slate-800 focus:border-pink-500 transition-all outline-none appearance-none" id="component_type" name="component_type">
+                            <option value="resistor">Resistor</option>
+                            <option value="capacitor">Capacitor</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-label-caps text-slate-500 mb-2" for="connection_type">Conexión</label>
+                        <select class="w-full bg-white border border-pink-200 rounded-lg px-4 py-3 text-slate-800 focus:border-pink-500 transition-all outline-none appearance-none" id="connection_type" name="connection_type">
+                            <option value="series">Serie</option>
+                            <option value="parallel">Paralelo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Columna derecha: Componentes -->
+        <section class="glass-card rounded-xl p-8 shadow-sm flex flex-col">
+            <div class="flex justify-between items-center border-b border-pink-100 pb-4 mb-6">
+                <h2 class="text-h2 text-slate-800 font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-pink-500">developer_board</span>
+                    Componentes
+                </h2>
+                <button type="button" id="add_btn" class="flex items-center gap-1 text-label-caps text-pink-500 hover:text-pink-700 transition-colors uppercase font-bold tracking-widest">
+                    <span class="material-symbols-outlined text-sm">add</span> Añadir
+                </button>
+            </div>
+            <div class="flex-grow">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-label-caps text-slate-400 border-b border-pink-100">
+                            <th class="pb-4 font-semibold">#</th>
+                            <th class="pb-4 font-semibold" id="val_header">Valor (Solo números)</th>
+                            <th class="pb-4 text-right font-semibold">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="components_body" class="divide-y divide-pink-50">
+                    </tbody>
+                </table>
+            </div>
+            <button type="submit" id="calculate_btn" class="w-full mt-8 py-4 primary-gradient text-white font-bold rounded-lg shadow-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">calculate</span>
+                Calcular Circuito
+            </button>
+        </section>
+    </div>
+    </form>
+
+    {% if resultados %}
+    <!-- Sección de resultados -->
+    <div class="space-y-12" id="results_panel">
+
+        <!-- Procedimiento -->
+        <div>
+            <h2 class="text-h2 text-slate-800 mb-6 font-semibold">Procedimiento</h2>
+            <div class="glass-card rounded-xl p-8 circuit-accent">
+                <div class="space-y-4 font-mono text-slate-600 text-sm md:text-base leading-relaxed">
+                    {% for paso in resultados.procedimiento %}
+                    <p class="flex items-start gap-3">
+                        <span class="text-pink-500 font-bold">{{ loop.index }}.</span>
+                        <span>{{ paso | safe }}</span>
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados finales -->
+        <div>
+            <h2 class="text-h2 text-slate-800 mb-6 font-semibold">Resultados Finales</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card rounded-xl p-6 border-l-4 border-pink-500">
+                    <label class="text-label-caps text-slate-400 mb-2 block uppercase">{{ resultados.total_title_1 }}</label>
+                    <div class="text-h1 font-bold text-emerald-600 drop-shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                        {{ resultados.total_val_1 }}
+                    </div>
+                </div>
+                <div class="glass-card rounded-xl p-6 border-l-4 border-pink-500">
+                    <label class="text-label-caps text-slate-400 mb-2 block uppercase">{{ resultados.total_title_2 }}</label>
+                    <div class="text-h1 font-bold text-emerald-600 drop-shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                        {{ resultados.total_val_2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Valores individuales -->
+        <div>
+            <h3 class="text-h2 text-slate-800 mb-6 font-semibold">Valores Individuales</h3>
+            <div class="glass-card rounded-xl overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-pink-50">
+                        <tr class="text-label-caps text-slate-500">
+                            <th class="px-6 py-4 font-semibold">Componente</th>
+                            {% if tipo_comp == 'resistor' %}
+                            <th class="px-6 py-4 font-semibold">Voltaje (V)</th>
+                            <th class="px-6 py-4 font-semibold">Corriente (A)</th>
+                            {% else %}
+                            <th class="px-6 py-4 font-semibold">Carga (V)</th>
+                            <th class="px-6 py-4 font-semibold">Voltaje (V)</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-pink-100">
+                        {% for res in resultados.individual_results %}
+                        <tr>
+                            <td class="px-6 py-5 text-pink-600 font-medium">{{ res.componente }}</td>
+                            {% if tipo_comp == 'resistor' %}
+                            <td class="px-6 py-5 font-mono text-slate-700">{{ res.voltaje }}</td>
+                            <td class="px-6 py-5 font-mono text-slate-700">{{ res.corriente }}</td>
+                            {% else %}
+                            <td class="px-6 py-5 font-mono text-slate-700">{{ res.carga }}</td>
+                            <td class="px-6 py-5 font-mono text-slate-700">{{ res.voltaje }}</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body></html>
