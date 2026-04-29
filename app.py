@@ -20,15 +20,22 @@ def calcular():
     try:
         tipo_componente = request.form.get('component_type')
         tipo_conexion = request.form.get('connection_type')
-        voltaje_bateria = request.form.get('battery_voltage')
+        voltaje_crudo = request.form.get('battery_voltage', '').strip()
+        prefijo_voltaje = request.form.get('prefijo_voltaje', '').strip()
+
+        voltaje_bateria = voltaje_crudo + prefijo_voltaje
 
         lista_componentes_cruda = request.form.getlist('componentes[]')
+        lista_prefijos = request.form.getlist('prefijos[]')
 
         lista_componentes = []
-        for valor in lista_componentes_cruda:
+        for indice, valor in enumerate(lista_componentes_cruda):
             texto_limpio = valor.strip()
             if texto_limpio:
-                lista_componentes.append(texto_limpio)
+                prefijo = ''
+                if indice < len(lista_prefijos):
+                    prefijo = lista_prefijos[indice].strip()
+                lista_componentes.append(texto_limpio + prefijo)
 
         if not voltaje_bateria or not lista_componentes:
             mensaje_error = 'Faltan datos. Asegúrate de ingresar el voltaje y al menos un componente.'

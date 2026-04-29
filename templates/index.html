@@ -39,19 +39,22 @@
       }
     </script>
 <style>
+    .color-white {
+    color: white !important;
+    }
         body {
-            background-color: #ffffff;
-            color: #1e1030;
+            background-color: #0f0f13;
+            color: #e2e8f0;
         }
         .glass-card {
-            background: rgba(253, 242, 248, 0.7);
+            background: rgba(30, 20, 40, 0.75);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(244, 114, 182, 0.2);
-            box-shadow: 0 4px 24px rgba(244, 114, 182, 0.08);
+            border: 1px solid rgba(244, 114, 182, 0.15);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
         }
         .glow-hover:hover {
-            box-shadow: 0 0 20px rgba(244, 114, 182, 0.25);
-            border-color: rgba(244, 114, 182, 0.6);
+            box-shadow: 0 0 20px rgba(244, 114, 182, 0.2);
+            border-color: rgba(244, 114, 182, 0.5);
         }
         .primary-gradient {
             background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
@@ -63,6 +66,9 @@
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             vertical-align: middle;
         }
+        input, select {
+            color-scheme: dark;
+        }
     </style>
 </head>
 <body class="font-inter antialiased min-h-screen">
@@ -70,14 +76,14 @@
 <main class="p-8 lg:p-12 max-w-7xl mx-auto w-full">
 
     <div class="text-center mb-12 pt-8">
-        <h1 class="text-h1 font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500 mb-2">Calculadora de Circuitos</h1>
-        <p class="text-slate-500 text-body-base">Resuelve circuitos simples con resistores y capacitores (Serie / Paralelo)</p>
+        <h1 class="text-h1 font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-400 mb-2">Calculadora de Circuitos</h1>
+        <p class="text-slate-400 text-body-base">Resuelve circuitos simples con resistores y capacitores (Serie / Paralelo)</p>
     </div>
 
     <!-- Mensaje de error -->
     {% if error %}
-    <div class="mb-8 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-body-sm flex items-center gap-3">
-        <span class="material-symbols-outlined text-rose-500">error</span>
+    <div class="mb-8 p-4 rounded-lg bg-rose-950 border border-rose-800 text-rose-300 text-body-sm flex items-center gap-3">
+        <span class="material-symbols-outlined text-rose-400">error</span>
         {{ error }}
     </div>
     {% endif %}
@@ -88,28 +94,36 @@
 
         <!-- Columna izquierda: Configuración -->
         <section class="glass-card rounded-xl p-8 shadow-sm">
-            <div class="border-b border-pink-100 pb-4 mb-6">
-                <h2 class="text-h2 text-slate-800 font-semibold flex items-center gap-2">
-                    <span class="material-symbols-outlined text-pink-500">tune</span>
+            <div class="border-b border-pink-900 pb-4 mb-6">
+                <h2 class="text-h2 text-slate-100 font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-pink-400">tune</span>
                     Configuración del Circuito
                 </h2>
             </div>
             <div class="space-y-6">
                 <div>
-                    <label class="block text-label-caps text-slate-500 mb-2" for="battery_voltage">Voltaje de la Batería (V)</label>
-                    <input class="w-full bg-white border border-pink-200 rounded-lg px-4 py-3 text-slate-800 font-mono focus:border-pink-500 focus:ring-1 focus:ring-pink-400 transition-all outline-none glow-hover" id="battery_voltage" name="battery_voltage" placeholder="Ej. 12" step="any" type="number" required/>
+                    <label class="block text-label-caps text-slate-400 mb-2" for="battery_voltage">Voltaje de la Batería</label>
+                    <div class="flex items-center gap-2">
+                        <input class="flex-1 bg-zinc-900 border border-pink-900 rounded-lg px-4 py-3 text-slate-100 font-mono focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all outline-none glow-hover placeholder-slate-600" id="battery_voltage" name="battery_voltage" placeholder="Ej. 12" step="any" type="text" inputmode="decimal" required/>
+                        <select name="prefijo_voltaje" class="bg-zinc-900 border border-pink-900 rounded-lg px-3 py-3 text-slate-200 text-sm focus:border-pink-500 outline-none">
+                            <option value="K">KV</option>
+                            <option value="" selected>V</option>
+                            <option value="m">mV</option>
+                            <option value="u">uV</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-label-caps text-slate-500 mb-2" for="component_type">Componente</label>
-                        <select class="w-full bg-white border border-pink-200 rounded-lg px-4 py-3 text-slate-800 focus:border-pink-500 transition-all outline-none appearance-none" id="component_type" name="component_type">
+                        <label class="block text-label-caps text-slate-400 mb-2" for="component_type">Componente</label>
+                        <select class="w-full bg-zinc-900 border border-pink-900 rounded-lg px-4 py-3 text-slate-100 focus:border-pink-500 transition-all outline-none appearance-none" id="component_type" name="component_type">
                             <option value="resistor">Resistor</option>
                             <option value="capacitor">Capacitor</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-label-caps text-slate-500 mb-2" for="connection_type">Conexión</label>
-                        <select class="w-full bg-white border border-pink-200 rounded-lg px-4 py-3 text-slate-800 focus:border-pink-500 transition-all outline-none appearance-none" id="connection_type" name="connection_type">
+                        <label class="block text-label-caps text-slate-400 mb-2" for="connection_type">Conexión</label>
+                        <select class="w-full bg-zinc-900 border border-pink-900 rounded-lg px-4 py-3 text-slate-100 focus:border-pink-500 transition-all outline-none appearance-none" id="connection_type" name="connection_type">
                             <option value="series">Serie</option>
                             <option value="parallel">Paralelo</option>
                         </select>
@@ -120,25 +134,25 @@
 
         <!-- Columna derecha: Componentes -->
         <section class="glass-card rounded-xl p-8 shadow-sm flex flex-col">
-            <div class="flex justify-between items-center border-b border-pink-100 pb-4 mb-6">
-                <h2 class="text-h2 text-slate-800 font-semibold flex items-center gap-2">
-                    <span class="material-symbols-outlined text-pink-500">developer_board</span>
+            <div class="flex justify-between items-center border-b border-pink-900 pb-4 mb-6">
+                <h2 class="text-h2 text-slate-100 font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-pink-400">developer_board</span>
                     Componentes
                 </h2>
-                <button type="button" id="add_btn" class="flex items-center gap-1 text-label-caps text-pink-500 hover:text-pink-700 transition-colors uppercase font-bold tracking-widest">
+                <button type="button" id="add_btn" class="flex items-center gap-1 text-label-caps text-pink-400 hover:text-pink-300 transition-colors uppercase font-bold tracking-widest">
                     <span class="material-symbols-outlined text-sm">add</span> Añadir
                 </button>
             </div>
             <div class="flex-grow">
                 <table class="w-full text-left">
                     <thead>
-                        <tr class="text-label-caps text-slate-400 border-b border-pink-100">
+                        <tr class="text-label-caps text-slate-500 border-b border-pink-900">
                             <th class="pb-4 font-semibold">#</th>
-                            <th class="pb-4 font-semibold" id="val_header">Valor (Solo números)</th>
+                            <th class="pb-4 font-semibold" id="val_header">Valor (ej: 4.7K, 100, 33n)</th>
                             <th class="pb-4 text-right font-semibold">Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="components_body" class="divide-y divide-pink-50">
+                    <tbody id="components_body" class="divide-y divide-pink-950">
                     </tbody>
                 </table>
             </div>
@@ -156,12 +170,12 @@
 
         <!-- Procedimiento -->
         <div>
-            <h2 class="text-h2 text-slate-800 mb-6 font-semibold">Procedimiento</h2>
+            <h2 class="text-h2 text-slate-100 mb-6 font-semibold">Procedimiento</h2>
             <div class="glass-card rounded-xl p-8 circuit-accent">
-                <div class="space-y-4 font-mono text-slate-600 text-sm md:text-base leading-relaxed">
+                <div class="space-y-4 font-mono text-slate-300 text-sm md:text-base leading-relaxed">
                     {% for paso in resultados.procedimiento %}
                     <p class="flex items-start gap-3">
-                        <span class="text-pink-500 font-bold">{{ loop.index }}.</span>
+                        <span class="text-pink-400 font-bold">{{ loop.index }}.</span>
                         <span>{{ paso | safe }}</span>
                     </p>
                     {% endfor %}
@@ -171,17 +185,17 @@
 
         <!-- Resultados finales -->
         <div>
-            <h2 class="text-h2 text-slate-800 mb-6 font-semibold">Resultados Finales</h2>
+            <h2 class="text-h2 text-slate-100 mb-6 font-semibold">Resultados Finales</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="glass-card rounded-xl p-6 border-l-4 border-pink-500">
                     <label class="text-label-caps text-slate-400 mb-2 block uppercase">{{ resultados.total_title_1 }}</label>
-                    <div class="text-h1 font-bold text-emerald-600 drop-shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                    <div class="text-h1 font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.25)]">
                         {{ resultados.total_val_1 }}
                     </div>
                 </div>
                 <div class="glass-card rounded-xl p-6 border-l-4 border-pink-500">
                     <label class="text-label-caps text-slate-400 mb-2 block uppercase">{{ resultados.total_title_2 }}</label>
-                    <div class="text-h1 font-bold text-emerald-600 drop-shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                    <div class="text-h1 font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.25)]">
                         {{ resultados.total_val_2 }}
                     </div>
                 </div>
@@ -190,31 +204,31 @@
 
         <!-- Valores individuales -->
         <div>
-            <h3 class="text-h2 text-slate-800 mb-6 font-semibold">Valores Individuales</h3>
+            <h3 class="text-h2 text-slate-100 mb-6 font-semibold">Valores Individuales</h3>
             <div class="glass-card rounded-xl overflow-hidden">
                 <table class="w-full text-left">
-                    <thead class="bg-pink-50">
-                        <tr class="text-label-caps text-slate-500">
+                    <thead class="bg-pink-950 bg-opacity-60">
+                        <tr class="text-label-caps text-slate-400">
                             <th class="px-6 py-4 font-semibold">Componente</th>
                             {% if tipo_comp == 'resistor' %}
                             <th class="px-6 py-4 font-semibold">Voltaje (V)</th>
                             <th class="px-6 py-4 font-semibold">Corriente (A)</th>
                             {% else %}
-                            <th class="px-6 py-4 font-semibold">Carga (V)</th>
+                            <th class="px-6 py-4 font-semibold">Carga (C)</th>
                             <th class="px-6 py-4 font-semibold">Voltaje (V)</th>
                             {% endif %}
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-pink-100">
+                    <tbody class="divide-y divide-pink-950">
                         {% for res in resultados.individual_results %}
-                        <tr>
-                            <td class="px-6 py-5 text-pink-600 font-medium">{{ res.componente }}</td>
+                        <tr class="hover:bg-pink-950 hover:bg-opacity-30 transition-colors">
+                            <td class="px-6 py-5 text-pink-400 font-medium">{{ res.componente }}</td>
                             {% if tipo_comp == 'resistor' %}
-                            <td class="px-6 py-5 font-mono text-slate-700">{{ res.voltaje }}</td>
-                            <td class="px-6 py-5 font-mono text-slate-700">{{ res.corriente }}</td>
+                            <td class="px-6 py-5 font-mono text-slate-300">{{ res.voltaje }}</td>
+                            <td class="px-6 py-5 font-mono text-slate-300">{{ res.corriente }}</td>
                             {% else %}
-                            <td class="px-6 py-5 font-mono text-slate-700">{{ res.carga }}</td>
-                            <td class="px-6 py-5 font-mono text-slate-700">{{ res.voltaje }}</td>
+                            <td class="px-6 py-5 font-mono text-slate-300">{{ res.carga }}</td>
+                            <td class="px-6 py-5 font-mono text-slate-300">{{ res.voltaje }}</td>
                             {% endif %}
                         </tr>
                         {% endfor %}
