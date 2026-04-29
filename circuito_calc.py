@@ -1,4 +1,103 @@
+import re
 import sympy as sp
+
+
+PREFIJOS_METRICOS = {
+    'p': 1e-12,
+    'n': 1e-9,
+    'u': 1e-6,
+    'm': 1e-3,
+    'K': 1e3,
+    'M': 1e6,
+    'G': 1e9,
+}
+
+
+PATRON_VALOR_PREFIJO = re.compile(
+    r'^\s*([+-]?\d+\.?\d*)\s*([pnumKMG])?\s*$'
+)
+
+
+def parsear_valor_con_prefijo(texto):
+    texto = texto.strip()
+    coincidencia = PATRON_VALOR_PREFIJO.match(texto)
+
+    if not coincidencia:
+        raise ValueError(
+            f"Formato inválido: '{texto}'. "
+            f"Use un número seguido opcionalmente de un prefijo (p, n, u, m, K, M, G)."
+        )
+
+    parte_numerica = float(coincidencia.group(1))
+    prefijo = coincidencia.group(2)
+
+    if prefijo:
+        multiplicador = PREFIJOS_METRICOS[prefijo]
+        return parte_numerica * multiplicador
+    else:
+        return parte_numerica
+
+
+def formatear_con_prefijo(valor, unidad):
+    
+    
+    if valor == 0:
+        return f"0 {unidad}"
+
+    valor_abs = abs(valor)
+
+    prefijos_ordenados = [
+        ('p', 1e-12),
+        ('n', 1e-9),
+        ('u', 1e-6),
+        ('m', 1e-3),
+        ('', 1),
+        ('K', 1e3),
+        ('M', 1e6),
+        ('G', 1e9),
+    ]
+
+    mejor_prefijo = ''
+    mejor_multiplicador = 1
+
+    for simbolo, multiplicador in prefijos_ordenados:
+        if valor_abs >= multiplicador * 0.999:
+            mejor_prefijo = simbolo
+            mejor_multiplicador = multiplicador
+
+    valor_formateado = valor / mejor_multiplicador
+    return f"{valor_formateado:.4g} {mejor_prefijo}{unidad}"
+
+
+def _prefijo_info(valor):
+    if valor == 0:
+        return (0, '')
+
+    valor_abs = abs(valor)
+    prefijos_ordenados = [
+        ('p', 1e-12), ('n', 1e-9), ('u', 1e-6), ('m', 1e-3),
+        ('', 1), ('K', 1e3), ('M', 1e6), ('G', 1e9),
+    ]
+    mejor_prefijo = ''
+    mejor_multiplicador = 1
+    for simbolo, multiplicador in prefijos_ordenados:
+        if valor_abs >= multiplicador * 0.999:
+            mejor_prefijo = simbolo
+            mejor_multiplicador = multiplicador
+    return (valor / mejor_multiplicador, mejor_prefijo)
+
+
+def _latex_val(valor, unidad):
+    escalado, prefijo = _prefijo_info(valor)
+    return f"{escalado:.4g} \\ \\text{{{prefijo}{unidad}}}"
+
+
+def _num_con_prefijo(valor, unidad=''):
+    escalado, prefijo = _prefijo_info(valor)
+    if unidad:
+        return f"{escalado:.4g} \\ \\text{{{prefijo}{unidad}}}"
+    return f"{escalado:.4g}{prefijo}"
+
 
 
 def resolver_resistores_serie(voltaje_bateria, resistores):
@@ -34,14 +133,16 @@ def resolver_resistores_serie(voltaje_bateria, resistores):
     # Paso 3b: Sustituir los valores numéricos y calcular la resistencia equivalente
     partes_sustitucion = []
     for resistor in resistores:
-        partes_sustitucion.append(str(resistor))
+        escalado, prefijo = _prefijo_info(resistor)
+        partes_sustitucion.append(f"{escalado:.4g} \\ \\text{{{prefijo}\\Omega}}")
     texto_sustitucion = " + ".join(partes_sustitucion)
 
     resistencia_equivalente = sum(resistores)
 
+    escalado_req, prefijo_req = _prefijo_info(resistencia_equivalente)
     pasos_procedimiento.append(
         f"<strong>Sustitución:</strong><br>"
-        f"$$R_{{eq}} = {texto_sustitucion} = {resistencia_equivalente:.4g} \\ \\Omega$$"
+        f"$$R_{{eq}} = {texto_sustitucion} = {escalado_req:.4g} \\ \\text{{{prefijo_req}\\Omega}}$$"
     )
 
     # Paso 3c: Mostrar la Ley de Ohm 
@@ -54,9 +155,12 @@ def resolver_resistores_serie(voltaje_bateria, resistores):
     # Paso 3d: Calcular la corriente total del circuito
     if resistencia_equivalente > 0:
         corriente_total = voltaje_bateria / resistencia_equivalente
+        esc_v, pre_v = _prefijo_info(voltaje_bateria)
+        esc_r, pre_r = _prefijo_info(resistencia_equivalente)
+        esc_i, pre_i = _prefijo_info(corriente_total)
         pasos_procedimiento.append(
             f"<strong>Sustitución:</strong><br>"
-            f"$$I = \\frac{{{voltaje_bateria}}}{{{resistencia_equivalente:.4g}}} = {corriente_total:.4g} \\ \\text{{A}}$$"
+            f"$$I = \\frac{{{esc_v:.4g} \\ \\text{{{pre_v}V}}}}{{{esc_r:.4g} \\ \\text{{{pre_r}\\Omega}}}} = {esc_i:.4g} \\ \\text{{{pre_i}A}}$$"
         )
     else:
         corriente_total = 0
@@ -76,17 +180,17 @@ def resolver_resistores_serie(voltaje_bateria, resistores):
         nombre_componente = f"R{indice + 1}"
         resultado_componente = {
             'componente': nombre_componente,
-            'voltaje': f"{voltaje_individual:.4g} V",
-            'corriente': f"{corriente_total:.4g} A"
+            'voltaje': formatear_con_prefijo(voltaje_individual, 'V'),
+            'corriente': formatear_con_prefijo(corriente_total, 'A')
         }
         resultados_individuales.append(resultado_componente)
 
     # --- Se  mete too en dicionario se retorna ---
     resultados_completos = {
         'total_title_1': 'Resistencia Equivalente',
-        'total_val_1': f"{resistencia_equivalente:.4g} Ω",
+        'total_val_1': formatear_con_prefijo(resistencia_equivalente, 'Ω'),
         'total_title_2': 'Corriente Total',
-        'total_val_2': f"{corriente_total:.4g} A",
+        'total_val_2': formatear_con_prefijo(corriente_total, 'A'),
         'individual_results': resultados_individuales,
         'procedimiento': pasos_procedimiento
     }
@@ -123,7 +227,8 @@ def resolver_resistores_paralelo(voltaje_bateria, resistores):
     # Paso 3b: Sustituir valores numéricos y calcular la suma de inversos
     partes_sustitucion_latex = []
     for resistor in resistores:
-        fraccion_latex = f"\\frac{{1}}{{{resistor}}}"
+        esc_r, pre_r = _prefijo_info(resistor)
+        fraccion_latex = f"\\frac{{1}}{{{esc_r:.4g} \\ \\text{{{pre_r}\\Omega}}}}"
         partes_sustitucion_latex.append(fraccion_latex)
     texto_sustitucion = " + ".join(partes_sustitucion_latex)
 
@@ -138,12 +243,14 @@ def resolver_resistores_paralelo(voltaje_bateria, resistores):
     else:
         resistencia_equivalente = 0
 
+    esc_sum, pre_sum = _prefijo_info(suma_inversos_numerica)
+    esc_req, pre_req = _prefijo_info(resistencia_equivalente)
     pasos_procedimiento.append(
         f"<strong>Sustitución:</strong><br>"
-        f"$$\\frac{{1}}{{R_{{eq}}}} = {texto_sustitucion} = {suma_inversos_numerica:.4g} \\ \\Omega^{{-1}}$$"
+        f"$$\\frac{{1}}{{R_{{eq}}}} = {texto_sustitucion} = {esc_sum:.4g} \\ \\text{{{pre_sum}\\Omega^{{-1}}}}$$"
     )
     pasos_procedimiento.append(
-        f"$$R_{{eq}} = \\frac{{1}}{{{suma_inversos_numerica:.4g}}} = {resistencia_equivalente:.4g} \\ \\Omega$$"
+        f"$$R_{{eq}} = \\frac{{1}}{{{esc_sum:.4g} \\ \\text{{{pre_sum}\\Omega^{{-1}}}}}} = {esc_req:.4g} \\ \\text{{{pre_req}\\Omega}}$$"
     )
 
     # Paso 3c: Ley de Ohm simbólica
@@ -161,9 +268,12 @@ def resolver_resistores_paralelo(voltaje_bateria, resistores):
 
     corriente_total = sum(corrientes_individuales)
 
+    esc_v, pre_v = _prefijo_info(voltaje_bateria)
+    esc_r, pre_r = _prefijo_info(resistencia_equivalente)
+    esc_it, pre_it = _prefijo_info(corriente_total)
     pasos_procedimiento.append(
         f"<strong>Sustitución:</strong><br>"
-        f"$$I_{{total}} = \\frac{{{voltaje_bateria}}}{{{resistencia_equivalente:.4g}}} = {corriente_total:.4g} \\ \\text{{A}}$$"
+        f"$$I_{{total}} = \\frac{{{esc_v:.4g} \\ \\text{{{pre_v}V}}}}{{{esc_r:.4g} \\ \\text{{{pre_r}\\Omega}}}} = {esc_it:.4g} \\ \\text{{{pre_it}A}}$$"
     )
 
     # --- Paso 5: Construir la lista de resultados individuales ---
@@ -172,17 +282,17 @@ def resolver_resistores_paralelo(voltaje_bateria, resistores):
         nombre_componente = f"R{indice + 1}"
         resultado_componente = {
             'componente': nombre_componente,
-            'voltaje': f"{voltaje_bateria:.4g} V",
-            'corriente': f"{corrientes_individuales[indice]:.4g} A"
+            'voltaje': formatear_con_prefijo(voltaje_bateria, 'V'),
+            'corriente': formatear_con_prefijo(corrientes_individuales[indice], 'A')
         }
         resultados_individuales.append(resultado_componente)
 
     # --- eL dicionario a retornar ---
     resultados_completos = {
         'total_title_1': 'Resistencia Equivalente',
-        'total_val_1': f"{resistencia_equivalente:.4g} Ω",
+        'total_val_1': formatear_con_prefijo(resistencia_equivalente, 'Ω'),
         'total_title_2': 'Corriente Total',
-        'total_val_2': f"{corriente_total:.4g} A",
+        'total_val_2': formatear_con_prefijo(corriente_total, 'A'),
         'individual_results': resultados_individuales,
         'procedimiento': pasos_procedimiento
     }
@@ -219,7 +329,8 @@ def resolver_capacitores_serie(voltaje_bateria, capacitores):
     # Paso 3b: Sustituir valores numéricos y calcular la suma de inversos
     partes_sustitucion_latex = []
     for capacitor in capacitores:
-        fraccion_latex = f"\\frac{{1}}{{{capacitor}}}"
+        esc_c, pre_c = _prefijo_info(capacitor)
+        fraccion_latex = f"\\frac{{1}}{{{esc_c:.4g} \\ \\text{{{pre_c}F}}}}"
         partes_sustitucion_latex.append(fraccion_latex)
     texto_sustitucion = " + ".join(partes_sustitucion_latex)
 
@@ -235,12 +346,14 @@ def resolver_capacitores_serie(voltaje_bateria, capacitores):
     else:
         capacitancia_equivalente = 0
 
+    esc_sum, pre_sum = _prefijo_info(suma_inversos_numerica)
+    esc_ceq, pre_ceq = _prefijo_info(capacitancia_equivalente)
     pasos_procedimiento.append(
         f"<strong>Sustitución:</strong><br>"
-        f"$$\\frac{{1}}{{C_{{eq}}}} = {texto_sustitucion} = {suma_inversos_numerica:.4g} \\ \\text{{F}}^{{-1}}$$"
+        f"$$\\frac{{1}}{{C_{{eq}}}} = {texto_sustitucion} = {esc_sum:.4g} \\ \\text{{{pre_sum}F^{{-1}}}}$$"
     )
     pasos_procedimiento.append(
-        f"$$C_{{eq}} = \\frac{{1}}{{{suma_inversos_numerica:.4g}}} = {capacitancia_equivalente:.4g} \\ \\text{{F}}$$"
+        f"$$C_{{eq}} = \\frac{{1}}{{{esc_sum:.4g} \\ \\text{{{pre_sum}F^{{-1}}}}}} = {esc_ceq:.4g} \\ \\text{{{pre_ceq}F}}$$"
     )
 
     # Paso 3c: Fórmula de carga simbólica
@@ -252,9 +365,12 @@ def resolver_capacitores_serie(voltaje_bateria, capacitores):
 
     # Paso 3d: Calcular la carga total del circuito
     carga_total = capacitancia_equivalente * voltaje_bateria
+    esc_ceq2, pre_ceq2 = _prefijo_info(capacitancia_equivalente)
+    esc_vb, pre_vb = _prefijo_info(voltaje_bateria)
+    esc_qt, pre_qt = _prefijo_info(carga_total)
     pasos_procedimiento.append(
         f"<strong>Sustitución:</strong><br>"
-        f"$$Q = {capacitancia_equivalente:.4g} \\times {voltaje_bateria} = {carga_total:.4g} \\ \\text{{C}}$$"
+        f"$$Q = {esc_ceq2:.4g} \\ \\text{{{pre_ceq2}F}} \\times {esc_vb:.4g} \\ \\text{{{pre_vb}V}} = {esc_qt:.4g} \\ \\text{{{pre_qt}C}}$$"
     )
 
     # --- Paso 4: Calcular el voltaje individual en cada capacitor ---
@@ -269,17 +385,17 @@ def resolver_capacitores_serie(voltaje_bateria, capacitores):
         nombre_componente = f"C{indice + 1}"
         resultado_componente = {
             'componente': nombre_componente,
-            'carga': f"{carga_total:.4g} C",
-            'voltaje': f"{voltaje_individual:.4g} V"
+            'carga': formatear_con_prefijo(carga_total, 'C'),
+            'voltaje': formatear_con_prefijo(voltaje_individual, 'V')
         }
         resultados_individuales.append(resultado_componente)
 
     # --- Dicionario a retornar --- 
     resultados_completos = {
         'total_title_1': 'Capacitancia Equivalente',
-        'total_val_1': f"{capacitancia_equivalente:.4g} F",
+        'total_val_1': formatear_con_prefijo(capacitancia_equivalente, 'F'),
         'total_title_2': 'Carga Total',
-        'total_val_2': f"{carga_total:.4g} C",
+        'total_val_2': formatear_con_prefijo(carga_total, 'C'),
         'individual_results': resultados_individuales,
         'procedimiento': pasos_procedimiento
     }
@@ -318,14 +434,16 @@ def resolver_capacitores_paralelo(voltaje_bateria, capacitores):
     # Paso 3b: Sustituir valores numéricos y sumar
     partes_sustitucion = []
     for capacitor in capacitores:
-        partes_sustitucion.append(str(capacitor))
+        esc_c, pre_c = _prefijo_info(capacitor)
+        partes_sustitucion.append(f"{esc_c:.4g} \\ \\text{{{pre_c}F}}")
     texto_sustitucion = " + ".join(partes_sustitucion)
 
     capacitancia_equivalente = sum(capacitores)
 
+    esc_ceq, pre_ceq = _prefijo_info(capacitancia_equivalente)
     pasos_procedimiento.append(
         f"<strong>Sustitución:</strong><br>"
-        f"$$C_{{eq}} = {texto_sustitucion} = {capacitancia_equivalente:.4g} \\ \\text{{F}}$$"
+        f"$$C_{{eq}} = {texto_sustitucion} = {esc_ceq:.4g} \\ \\text{{{pre_ceq}F}}$$"
     )
 
     # Paso 3c: Fórmula de carga simbólica 
@@ -337,9 +455,12 @@ def resolver_capacitores_paralelo(voltaje_bateria, capacitores):
 
     # Paso 3d: Calcular la carga total
     carga_total = capacitancia_equivalente * voltaje_bateria
+    esc_ceq2, pre_ceq2 = _prefijo_info(capacitancia_equivalente)
+    esc_vb, pre_vb = _prefijo_info(voltaje_bateria)
+    esc_qt, pre_qt = _prefijo_info(carga_total)
     pasos_procedimiento.append(
         f"<strong>Sustitución:</strong><br>"
-        f"$$Q = {capacitancia_equivalente:.4g} \\times {voltaje_bateria} = {carga_total:.4g} \\ \\text{{C}}$$"
+        f"$$Q = {esc_ceq2:.4g} \\ \\text{{{pre_ceq2}F}} \\times {esc_vb:.4g} \\ \\text{{{pre_vb}V}} = {esc_qt:.4g} \\ \\text{{{pre_qt}C}}$$"
     )
 
     # --- Paso 4: Calcular la carga individual en cada capacitor 
@@ -354,17 +475,17 @@ def resolver_capacitores_paralelo(voltaje_bateria, capacitores):
         nombre_componente = f"C{indice + 1}"
         resultado_componente = {
             'componente': nombre_componente,
-            'carga': f"{carga_individual:.4g} C",
-            'voltaje': f"{voltaje_bateria:.4g} V"
+            'carga': formatear_con_prefijo(carga_individual, 'C'),
+            'voltaje': formatear_con_prefijo(voltaje_bateria, 'V')
         }
         resultados_individuales.append(resultado_componente)
 
     # --- Dicionario a retornar ---
     resultados_completos = {
         'total_title_1': 'Capacitancia Equivalente',
-        'total_val_1': f"{capacitancia_equivalente:.4g} F",
+        'total_val_1': formatear_con_prefijo(capacitancia_equivalente, 'F'),
         'total_title_2': 'Carga Total',
-        'total_val_2': f"{carga_total:.4g} C",
+        'total_val_2': formatear_con_prefijo(carga_total, 'C'),
         'individual_results': resultados_individuales,
         'procedimiento': pasos_procedimiento
     }
@@ -378,16 +499,16 @@ def resolver_circuito(tipo_componente, tipo_conexion, voltaje_bateria, component
     """
 
     try:
-        voltaje_bateria = float(voltaje_bateria)
+        voltaje_bateria = parsear_valor_con_prefijo(str(voltaje_bateria))
 
         valores_numericos = []
         for valor_texto in componentes:
-            valor_numerico = float(valor_texto)
+            valor_numerico = parsear_valor_con_prefijo(str(valor_texto))
             valores_numericos.append(valor_numerico)
         componentes = valores_numericos
 
-    except ValueError:
-        return {"error": "Solo se permiten números."}
+    except ValueError as error_valor:
+        return {"error": f"Error en los valores ingresados: {error_valor}"}
 
     if not componentes:
         return {"error": "No hay componentes o los valores son inválidos."}

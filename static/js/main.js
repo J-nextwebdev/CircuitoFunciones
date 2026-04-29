@@ -19,13 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
     compTypeSelect.addEventListener('change', (e) => {
         const type = e.target.value;
         if (type === 'resistor') {
-            valHeader.textContent = 'Resistencia (Solo números)';
+            valHeader.textContent = 'Resistencia (ej: 4.7K, 100, 33n)';
             updateComponentLabels('R');
         } else {
-            valHeader.textContent = 'Capacitancia (Solo números)';
+            valHeader.textContent = 'Capacitancia (ej: 100u, 3.3n, 47p)';
             updateComponentLabels('C');
         }
-        //  unidades en filas existentes
         const unit = type === 'resistor' ? 'Ω' : 'F';
         componentsBody.querySelectorAll('.unit-label').forEach(span => {
             span.textContent = unit;
@@ -48,8 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.innerHTML = `
             <td class="py-4 text-slate-500 font-mono comp-label">${prefix}${componentsBody.children.length + 1}</td>
             <td class="py-4">
-                <input type="number" step="any" name="componentes[]" class="bg-transparent border-none color-white focus:ring-0 p-0 w-24 comp-value" placeholder="Valor" required>
-                <span class="text-slate-400 text-xs ml-1 unit-label">${unit}</span>
+                <div class="flex items-center gap-2">
+                    <input type="text" inputmode="decimal" name="componentes[]" class="bg-transparent border-none color-white focus:ring-0 p-0 w-20 comp-value" placeholder="Ej: 4.7" required>
+                    <select name="prefijos[]" class="bg-zinc-800 border border-pink-900 rounded px-2 py-1 text-slate-200 text-xs focus:border-pink-500 outline-none prefix-select" style="min-width:60px;">
+                        <option value="G">G (Giga)</option>
+                        <option value="M">M (Mega)</option>
+                        <option value="K">K (Kilo)</option>
+                        <option value="" selected>— (Base)</option>
+                        <option value="m">m (mili)</option>
+                        <option value="u">u (micro)</option>
+                        <option value="n">n (nano)</option>
+                        <option value="p">p (pico)</option>
+                    </select>
+                    <span class="text-slate-400 text-xs ml-1 unit-label">${unit}</span>
+                </div>
             </td>
             <td class="py-4 text-right">
                 <button type="button" class="material-symbols-outlined text-slate-400 hover:text-rose-500 transition-colors remove-btn">delete</button>

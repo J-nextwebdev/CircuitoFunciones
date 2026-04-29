@@ -102,8 +102,16 @@
             </div>
             <div class="space-y-6">
                 <div>
-                    <label class="block text-label-caps text-slate-400 mb-2" for="battery_voltage">Voltaje de la Batería (V)</label>
-                    <input class="w-full bg-zinc-900 border border-pink-900 rounded-lg px-4 py-3 text-slate-100 font-mono focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all outline-none glow-hover placeholder-slate-600" id="battery_voltage" name="battery_voltage" placeholder="Ej. 12" step="any" type="number" required/>
+                    <label class="block text-label-caps text-slate-400 mb-2" for="battery_voltage">Voltaje de la Batería</label>
+                    <div class="flex items-center gap-2">
+                        <input class="flex-1 bg-zinc-900 border border-pink-900 rounded-lg px-4 py-3 text-slate-100 font-mono focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all outline-none glow-hover placeholder-slate-600" id="battery_voltage" name="battery_voltage" placeholder="Ej. 12" step="any" type="text" inputmode="decimal" required/>
+                        <select name="prefijo_voltaje" class="bg-zinc-900 border border-pink-900 rounded-lg px-3 py-3 text-slate-200 text-sm focus:border-pink-500 outline-none">
+                            <option value="K">KV</option>
+                            <option value="" selected>V</option>
+                            <option value="m">mV</option>
+                            <option value="u">uV</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -140,7 +148,7 @@
                     <thead>
                         <tr class="text-label-caps text-slate-500 border-b border-pink-900">
                             <th class="pb-4 font-semibold">#</th>
-                            <th class="pb-4 font-semibold" id="val_header">Valor (Solo números)</th>
+                            <th class="pb-4 font-semibold" id="val_header">Valor (ej: 4.7K, 100, 33n)</th>
                             <th class="pb-4 text-right font-semibold">Acción</th>
                         </tr>
                     </thead>
