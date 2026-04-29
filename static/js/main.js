@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.innerHTML = `
             <td class="py-4 text-slate-500 font-mono comp-label">${prefix}${componentsBody.children.length + 1}</td>
             <td class="py-4">
-                <input type="number" step="any" name="componentes[]" class="bg-transparent border-none text-slate-800 font-mono focus:ring-0 p-0 w-24 comp-value" placeholder="Valor" required>
+                <input type="number" step="any" name="componentes[]" class="bg-transparent border-none color-white focus:ring-0 p-0 w-24 comp-value" placeholder="Valor" required>
                 <span class="text-slate-400 text-xs ml-1 unit-label">${unit}</span>
             </td>
             <td class="py-4 text-right">
